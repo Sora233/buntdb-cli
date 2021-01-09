@@ -3,6 +3,11 @@ package db
 import (
 	"errors"
 	"github.com/tidwall/buntdb"
+	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
 )
 
 var db *buntdb.DB
@@ -13,6 +18,9 @@ func InitBuntDB(filename string) error {
 	buntDB, err := buntdb.Open(filename)
 	if err != nil {
 		return err
+	}
+	if db != nil {
+		db.Close()
 	}
 	db = buntDB
 	db.SetConfig(buntdb.Config{
@@ -41,4 +49,24 @@ func Close() error {
 		db = nil
 	}
 	return nil
+}
+
+func GetTempDbPath(prefix string) string {
+	fileInfo, err := ioutil.ReadDir(os.TempDir())
+	if err == nil {
+		for _, fi := range fileInfo {
+			if fi.IsDir() {
+				continue
+			}
+			if strings.HasPrefix(filepath.Base(fi.Name()), prefix) {
+				return path.Join(os.TempDir(), fi.Name())
+			}
+		}
+	}
+	f, err := ioutil.TempFile("", prefix)
+	if err != nil {
+		return ""
+	}
+	f.Close()
+	return f.Name()
 }

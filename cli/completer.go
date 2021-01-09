@@ -1,40 +1,37 @@
-package main
+package cli
 
 import (
 	"github.com/c-bata/go-prompt"
 	"strings"
 )
 
-func buntdbCompleter(d prompt.Document) []prompt.Suggest {
+func BuntdbCompleter(d prompt.Document) []prompt.Suggest {
 	if d.TextBeforeCursor() == "" {
 		return []prompt.Suggest{}
 	}
 	args := strings.Split(d.TextBeforeCursor(), " ")
 	if len(args) == 1 {
 		// input command
-		return cmdCompleter(args[0], true)
+		return cmdCompleter(args[0])
 	} else {
 		return optionCompleter(args[0], args[1:])
 	}
 }
 
-func cmdCompleter(cmd string, help bool) []prompt.Suggest {
+func cmdCompleter(cmd string) []prompt.Suggest {
 	cmds := []prompt.Suggest{
 		{Text: "get", Description: "get command"},
 		{Text: "set", Description: "set command"},
 		{Text: "del", Description: "del command"},
 		{Text: "show", Description: "show info"},
-		{Text: "scan", Description: "iterate keys"},
+		{Text: "keys", Description: "iterate keys"},
 		{Text: "use", Description: "change db"},
-	}
-	if help {
-		cmds = append(cmds, prompt.Suggest{Text: "help", Description: "show help for command"})
+		{Text: "exit", Description: "exit buntdb shell client"},
 	}
 	return prompt.FilterHasPrefix(cmds, cmd, true)
 }
 
 func optionCompleter(cmd string, args []string) []prompt.Suggest {
-	last := args[len(args)-1]
 	switch cmd {
 	case "get":
 	case "set":
@@ -44,9 +41,8 @@ func optionCompleter(cmd string, args []string) []prompt.Suggest {
 			{Text: "index"},
 			{Text: "db"},
 		}
-	case "scan":
-	case "help":
-		return cmdCompleter(last, false)
+	case "keys":
+	case "use":
 	default:
 		return []prompt.Suggest{}
 	}

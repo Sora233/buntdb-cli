@@ -1,7 +1,7 @@
 flags = "-X main.COMMIT=`git rev-parse --short HEAD` -X 'main.GOVERSION=`go version`'"
 package = buntdb-cli
 cov = .coverage
-SRC = $(wildcard db/*.go ./*.go)
+SRC = $(wildcard db/*.go cli/*.go ./*.go)
 
 build : $(package)
 test : $(cov)
