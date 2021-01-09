@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/c-bata/go-prompt"
 	"strings"
 )
@@ -19,6 +20,9 @@ func BuntdbCompleter(d prompt.Document) []prompt.Suggest {
 }
 
 func cmdCompleter(cmd string) []prompt.Suggest {
+	if Debug {
+		fmt.Printf("cmdCompleter %v\n", cmd)
+	}
 	cmds := []prompt.Suggest{
 		{Text: "get", Description: "get command"},
 		{Text: "set", Description: "set command"},
@@ -32,6 +36,9 @@ func cmdCompleter(cmd string) []prompt.Suggest {
 }
 
 func optionCompleter(cmd string, args []string) []prompt.Suggest {
+	if Debug {
+		fmt.Printf("optionCompleter %v %v\n", cmd, args)
+	}
 	switch cmd {
 	case "get":
 	case "set":

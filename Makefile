@@ -4,7 +4,12 @@ cov = .coverage
 SRC = $(wildcard db/*.go cli/*.go ./*.go)
 
 build : $(package)
+
+install : $(package)
+	go install
+
 test : $(cov)
+
 cov: $(cov)
 	go tool cover -html=$(cov)
 
