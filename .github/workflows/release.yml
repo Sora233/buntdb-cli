@@ -1,0 +1,29 @@
+name: Go
+
+on: 
+  release:
+    types: [created]
+  
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # build and publish in parallel: linux/386, linux/amd64, windows/386, windows/amd64, darwin/386, darwin/amd64 
+        goos: [linux, windows, darwin]
+        goarch: ["386", amd64, arm]
+        exclude: 
+          - goos: darwin
+            goarch: arm
+          - goos: darwin
+            goarch: "386"
+    steps:
+    - uses: actions/checkout@v2
+    - uses: wangyoucao577/go-release-action@v1.12
+      with:
+        build_command: make build
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goversion: "https://dl.google.com/go/go1.15.6.linux-amd64.tar.gz"
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
