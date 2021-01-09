@@ -27,6 +27,7 @@ func cmdCompleter(cmd string) []prompt.Suggest {
 		{Text: "get", Description: "get command"},
 		{Text: "set", Description: "set command"},
 		{Text: "del", Description: "del command"},
+		{Text: "ttl", Description: "ttl command"},
 		{Text: "show", Description: "show info"},
 		{Text: "keys", Description: "iterate keys"},
 		{Text: "use", Description: "change db"},

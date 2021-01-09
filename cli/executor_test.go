@@ -13,6 +13,7 @@ func TestBuntdbExecutor(t *testing.T) {
 	assert.Equal(t, db.GetDbPath(), "testcli")
 	bd, err := db.GetClient()
 	assert.Nil(t, err)
+	BuntdbExecutor("fake")
 	BuntdbExecutor("get a")
 	BuntdbExecutor("get -h")
 	BuntdbExecutor("get")
@@ -30,6 +31,18 @@ func TestBuntdbExecutor(t *testing.T) {
 		assert.Equal(t, "c", val)
 		return nil
 	})
+	BuntdbExecutor("set a d 999")
+	bd.View(func(tx *buntdb.Tx) error {
+		val, err := tx.Get("a")
+		assert.Nil(t, err)
+		assert.Equal(t, "d", val)
+		ttl, err := tx.TTL("a")
+		assert.Nil(t, err)
+		assert.Greater(t, ttl.Seconds(), 0.0)
+		return nil
+	})
+	BuntdbExecutor("ttl a")
+	BuntdbExecutor("ttl b")
 	BuntdbExecutor("get a")
 	BuntdbExecutor("show db")
 	BuntdbExecutor("show index")
@@ -38,6 +51,13 @@ func TestBuntdbExecutor(t *testing.T) {
 	bd.View(func(tx *buntdb.Tx) error {
 		_, err := tx.Get("a")
 		assert.Equal(t, buntdb.ErrNotFound, err)
+		return nil
+	})
+	BuntdbExecutor(`set "a b" c`)
+	bd.View(func(tx *buntdb.Tx) error {
+		val, err := tx.Get("a b")
+		assert.Nil(t, err)
+		assert.Equal(t, "c", val)
 		return nil
 	})
 	BuntdbExecutor("del b")

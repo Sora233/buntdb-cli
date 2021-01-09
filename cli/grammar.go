@@ -6,6 +6,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/tidwall/buntdb"
 	"os"
+	"time"
 )
 
 var null = "<nil>"
@@ -38,6 +39,7 @@ func (g *GetGrammar) Run(ctx *kong.Context) error {
 type SetGrammar struct {
 	Key   string `arg:"" help:"the key to set"`
 	Value string `arg:"" help:"the value assign to the key"`
+	TTL   int64  `arg:"" optional:"" help:"expire time in second"`
 }
 
 func (s *SetGrammar) Run(ctx *kong.Context) error {
@@ -46,7 +48,12 @@ func (s *SetGrammar) Run(ctx *kong.Context) error {
 		return err
 	}
 	err = bd.Update(func(tx *buntdb.Tx) error {
-		oldval, _, err := tx.Set(s.Key, s.Value, nil)
+		setOpt := &buntdb.SetOptions{}
+		if s.TTL != 0 {
+			setOpt.Expires = true
+			setOpt.TTL = time.Duration(s.TTL) * time.Second
+		}
+		oldval, _, err := tx.Set(s.Key, s.Value, setOpt)
 		if err != nil {
 			return err
 		} else {
@@ -152,13 +159,38 @@ func (u *UseGrammar) Run(ctx *kong.Context) error {
 	return db.InitBuntDB(u.Path)
 }
 
+type TTLGrammar struct {
+	Key string `arg:"" help:"the key to show ttl"`
+}
+
+func (t *TTLGrammar) Run(ctx *kong.Context) error {
+	bd, err := db.GetClient()
+	if err != nil {
+		return err
+	}
+	return bd.View(func(tx *buntdb.Tx) error {
+		t, err := tx.TTL(t.Key)
+		if err != nil {
+			if err == buntdb.ErrNotFound {
+				fmt.Fprintln(ctx.Stdout, null)
+				return nil
+			}
+			return err
+		} else {
+			fmt.Fprintln(ctx.Stdout, int64(t.Seconds()))
+			return nil
+		}
+	})
+}
+
 type Grammar struct {
 	Get  GetGrammar  `cmd:"" help:"get a value from key, return the value if key exists, or <nil> if non-exists."`
-	Set  SetGrammar  `cmd:"" help:"set a key-value, return the old value, or <nil> if old value doesn't exist."`
+	Set  SetGrammar  `cmd:"" help:"set a key-value [ttl], return the old value, or <nil> if old value doesn't exist."`
 	Del  DelGrammar  `cmd:"" help:"delete a key, return 1 if success, or 0 if key doesn't exist."`
-	Show ShowGrammar `cmd:"" help:"show index or db"`
+	Show ShowGrammar `cmd:"" help:"show index or db."`
 	Keys KeysGrammar `cmd:"" help:"iterate over the key match the pattern, support '?' and '*'."`
-	Use  UseGrammar  `cmd:"" help:"switch to other db"`
+	Use  UseGrammar  `cmd:"" help:"switch to other db."`
+	TTL  TTLGrammar  `cmd:"" help:"get key ttl (seconds), 0 if no ttl, <nil> if key doesn't exist'"`
 	Exit bool        `kong:"-"`
 }
 

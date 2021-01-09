@@ -1,6 +1,6 @@
 # Buntdb-cli
 
-an interactive buntdb shell client
+an interactive [buntdb](https://github.com/tidwall/buntdb) shell client
 
 ----
 
@@ -14,7 +14,6 @@ an interactive buntdb shell client
 
 ```shell
 go get -u -v github.com/Sora233/buntdb-cli
-make
 ```
 
 ### Usage
@@ -27,6 +26,7 @@ make
     * get
     * set
     * del
+    * ttl
     * show
     * keys
     * use
@@ -36,5 +36,4 @@ You can provide -h flag for command to print help message.
 
 ### TODO
 
-- [ ] ttl / set with ttl
 - [ ] create index

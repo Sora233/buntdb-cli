@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/Sora233/buntdb-cli/cli"
 	"github.com/Sora233/buntdb-cli/db"
 	"github.com/alecthomas/kong"
@@ -37,4 +38,5 @@ func main() {
 		prompt.OptionPrefix(path.Base(CLI.Path)+"> "),
 	)
 	p.Run()
+	fmt.Println("bye")
 }
