@@ -34,12 +34,6 @@ func TestGetClient(t *testing.T) {
 	assert.Equal(t, GetDbPath(), testDb)
 }
 
-func TestGetDbPath(t *testing.T) {
-	InitBuntDB(testDb)
-	defer os.Remove(testDb)
-	defer Close()
-}
-
 func TestSwitchBuntDB(t *testing.T) {
 	assert.Nil(t, InitBuntDB(testDb))
 	db, err := GetClient()
@@ -63,14 +57,13 @@ func TestSwitchBuntDB(t *testing.T) {
 }
 
 func TestGetTempDbPath(t *testing.T) {
-	path1 := GetTempDbPath("testcli")
-	assert.True(t, strings.HasPrefix(filepath.Base(path1), "testcli"))
-	path2 := GetTempDbPath("testcli")
-	assert.True(t, strings.HasPrefix(filepath.Base(path2), "testcli"))
+	path1 := GetTempDbPath("tmppath")
+	assert.True(t, strings.HasPrefix(filepath.Base(path1), "tmppath"))
+	path2 := GetTempDbPath("tmppath")
+	assert.True(t, strings.HasPrefix(filepath.Base(path2), "tmppath"))
 	assert.Equal(t, path1, path2)
-	Close()
-	os.Remove(testDb)
-	os.Remove(testDb2)
+	os.Remove(path1)
+	os.Remove(path2)
 }
 
 func TestRWDescribe(t *testing.T) {
@@ -103,6 +96,18 @@ func TestBegin(t *testing.T) {
 	assert.Equal(t, buntdb.ErrTxNotWritable, err)
 	assert.NotNil(t, Commit())
 	assert.Nil(t, Rollback())
+
+	assert.Equal(t, ErrNoTransaction, Commit())
+	assert.Equal(t, ErrNoTransaction, Rollback())
+	tx, err = Begin(true)
+	assert.Nil(t, err)
+	tx, err = Begin(false)
+	assert.Equal(t, ErrNestedTransaction, err)
+
+	assert.Equal(t, ErrTransactionExist, InitBuntDB(testDb))
+	assert.Nil(t, Rollback())
+	Close()
+
 	os.Remove(testDb)
 	os.Remove(testDb2)
 }

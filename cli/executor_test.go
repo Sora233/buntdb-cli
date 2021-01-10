@@ -9,6 +9,7 @@ import (
 )
 
 func TestBuntdbExecutor(t *testing.T) {
+	Debug = true
 	BuntdbExecutor("use -c testcli")
 	assert.Equal(t, db.GetDbPath(), "testcli")
 	bd, err := db.GetClient()
@@ -113,6 +114,8 @@ func TestBuntdbExecutor(t *testing.T) {
 	assert.Equal(t, db.GetDbPath(), "testcli-2")
 	BuntdbExecutor("use -c testcli")
 	assert.Equal(t, db.GetDbPath(), "testcli")
+	BuntdbExecutor("exit")
+	BuntdbExecutor("")
 
 	os.Remove("testcli")
 	os.Remove("testcli-2")
