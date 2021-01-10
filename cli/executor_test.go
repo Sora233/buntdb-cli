@@ -61,6 +61,53 @@ func TestBuntdbExecutor(t *testing.T) {
 		return nil
 	})
 	BuntdbExecutor("del b")
+	BuntdbExecutor("del a")
+
+	BuntdbExecutor("rwbegin")
+	BuntdbExecutor("set x y")
+	BuntdbExecutor("set y x")
+	BuntdbExecutor("commit")
+
+	bd.View(func(tx *buntdb.Tx) error {
+		val, err := tx.Get("x")
+		assert.Nil(t, err)
+		assert.Equal(t, "y", val)
+		val, err = tx.Get("y")
+		assert.Nil(t, err)
+		assert.Equal(t, "x", val)
+		return nil
+	})
+
+	BuntdbExecutor("rwbegin")
+	BuntdbExecutor("del x")
+	BuntdbExecutor("del y")
+	BuntdbExecutor("set x xxx")
+	BuntdbExecutor("rollback")
+	bd.View(func(tx *buntdb.Tx) error {
+		val, err := tx.Get("x")
+		assert.Nil(t, err)
+		assert.Equal(t, "y", val)
+		val, err = tx.Get("y")
+		assert.Nil(t, err)
+		assert.Equal(t, "x", val)
+		return nil
+	})
+
+	BuntdbExecutor("rbegin")
+	BuntdbExecutor("del x")
+	BuntdbExecutor("del y")
+	BuntdbExecutor("commit")
+	BuntdbExecutor("rollback")
+	bd.View(func(tx *buntdb.Tx) error {
+		val, err := tx.Get("x")
+		assert.Nil(t, err)
+		assert.Equal(t, "y", val)
+		val, err = tx.Get("y")
+		assert.Nil(t, err)
+		assert.Equal(t, "x", val)
+		return nil
+	})
+
 	BuntdbExecutor("use testcli-2")
 	BuntdbExecutor("use -c testcli-2")
 	assert.Equal(t, db.GetDbPath(), "testcli-2")

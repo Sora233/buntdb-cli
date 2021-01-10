@@ -11,10 +11,15 @@ import (
 )
 
 var db *buntdb.DB
+var tx *buntdb.Tx
+var writable bool
 
 var dbpath string
 
 func InitBuntDB(filename string) error {
+	if tx != nil {
+		return ErrTransactionExist
+	}
 	buntDB, err := buntdb.Open(filename)
 	if err != nil {
 		return err
@@ -69,4 +74,63 @@ func GetTempDbPath(prefix string) string {
 	}
 	f.Close()
 	return f.Name()
+}
+
+func Begin(_writable bool) (*buntdb.Tx, error) {
+	if tx != nil {
+		return nil, ErrNestedTransaction
+	}
+	bd, err := GetClient()
+	if err != nil {
+		return nil, err
+	}
+	_tx, err := bd.Begin(_writable)
+	if err != nil {
+		return nil, err
+	}
+	tx = _tx
+	writable = _writable
+	return tx, err
+}
+
+func Commit() error {
+	if tx == nil {
+		return ErrNoTransaction
+	}
+
+	err := tx.Commit()
+	if err != nil {
+		if err == buntdb.ErrTxNotWritable {
+			return errors.New("readonly transaction can only rollback")
+		}
+		return err
+	} else {
+		tx = nil
+		return nil
+	}
+}
+
+func Rollback() error {
+	if tx == nil {
+		return ErrNoTransaction
+	}
+	err := tx.Rollback()
+	if err != nil {
+		return err
+	} else {
+		tx = nil
+		return nil
+	}
+}
+
+func GetCurrentTransaction() (*buntdb.Tx, bool) {
+	return tx, writable
+}
+
+func RWDescribe(writable bool) string {
+	if writable {
+		return "rw"
+	} else {
+		return "r"
+	}
 }

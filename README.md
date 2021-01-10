@@ -2,7 +2,8 @@
 
 an interactive [buntdb](https://github.com/tidwall/buntdb) shell client
 
-![build](https://github.com/Sora233/buntdb-cli/workflows/.github/workflows/ci.yml/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/Sora233/buntdb-cli/badge.svg)](https://coveralls.io/github/Sora233/buntdb-cli)
+![build](https://github.com/Sora233/buntdb-cli/workflows/.github/workflows/ci.yml/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/Sora233/buntdb-cli/badge.svg)](https://coveralls.io/github/Sora233/buntdb-cli)
 
 
 ----
@@ -30,6 +31,10 @@ go get -u -v github.com/Sora233/buntdb-cli
     * set
     * del
     * ttl
+    * rbegin (begin a readonly transaction)
+    * rwbegin (begin a read/write transaction)
+    * commit
+    * rollback
     * show
     * keys
     * use

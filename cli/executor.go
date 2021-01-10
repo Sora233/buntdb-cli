@@ -2,18 +2,15 @@ package cli
 
 import (
 	"fmt"
+	"github.com/Sora233/buntdb-cli/db"
 	"github.com/alecthomas/kong"
-	"runtime"
 	"strings"
 )
 
 func BuntdbExecutor(s string) {
 	s = strings.TrimSpace(s)
-	if s == "" {
+	if s == "" || s == "exit" {
 		return
-	} else if s == "exit" {
-		fmt.Println("bye")
-		runtime.Goexit()
 	}
 	args := ArgSplit(s)
 
@@ -34,8 +31,54 @@ func BuntdbExecutor(s string) {
 		fmt.Printf("ERR: %v\n", err)
 		return
 	}
-	err = ctx.Run()
-	if err != nil {
-		fmt.Printf("ERR: %v\n", err)
+	cmd := ctx.Selected().Name
+	if cmd == "rwbegin" || cmd == "rbegin" || cmd == "rollback" || cmd == "commit" {
+		err = ctx.Run()
+		if err != nil {
+			fmt.Printf("ERR: %v\n", err)
+		}
+		return
+	}
+	tx, rw := db.GetCurrentTransaction()
+	if ctx.Selected().Name == "use" {
+		fmt.Printf("tx %v", tx)
+		err = ctx.Run(tx)
+		if err != nil {
+			fmt.Printf("ERR: %v\n", err)
+		}
+		return
+	}
+	if tx != nil {
+		if Debug {
+			fmt.Printf("got current %v transaction\n", db.RWDescribe(rw))
+		}
+		err = ctx.Run(tx)
+		if err != nil {
+			fmt.Printf("ERR: %v\n", err)
+			return
+		}
+	} else {
+		if Debug {
+			fmt.Printf("no transaction, create a rw transaction\n")
+		}
+		tx, err := db.Begin(true)
+		if err != nil {
+			fmt.Printf("ERR: %v\n", err)
+			return
+		}
+		defer func() {
+			if Debug {
+				fmt.Printf("transaction commit\n")
+			}
+			err := db.Commit()
+			if err != nil {
+				fmt.Printf("ERR: commit error %v\n", err)
+			}
+		}()
+		err = ctx.Run(tx)
+		if err != nil {
+			fmt.Printf("ERR: %v\n", err)
+			return
+		}
 	}
 }

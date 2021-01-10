@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/Sora233/buntdb-cli/db"
 	"github.com/c-bata/go-prompt"
 	"strings"
 )
@@ -33,6 +34,18 @@ func cmdCompleter(cmd string) []prompt.Suggest {
 		{Text: "use", Description: "change db"},
 		{Text: "exit", Description: "exit buntdb shell client"},
 	}
+	tx, _ := db.GetCurrentTransaction()
+	if tx == nil {
+		cmds = append(cmds,
+			prompt.Suggest{Text: "rbegin", Description: "open a readonly transaction"},
+			prompt.Suggest{Text: "rwbegin", Description: "open a read/write transaction"},
+		)
+	} else {
+		cmds = append(cmds,
+			prompt.Suggest{Text: "rollback", Description: "rollback a transaction"},
+			prompt.Suggest{Text: "commit", Description: "commit a transaction"},
+		)
+	}
 	return prompt.FilterHasPrefix(cmds, cmd, true)
 }
 
@@ -44,6 +57,7 @@ func optionCompleter(cmd string, args []string) []prompt.Suggest {
 	case "get":
 	case "set":
 	case "del":
+	case "ttl":
 	case "show":
 		return []prompt.Suggest{
 			{Text: "index"},
@@ -51,6 +65,10 @@ func optionCompleter(cmd string, args []string) []prompt.Suggest {
 		}
 	case "keys":
 	case "use":
+	case "rbegin":
+	case "rwbegin":
+	case "rollback":
+	case "commit":
 	default:
 		return []prompt.Suggest{}
 	}

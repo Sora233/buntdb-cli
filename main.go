@@ -35,8 +35,23 @@ func main() {
 		cli.BuntdbExecutor,
 		cli.BuntdbCompleter,
 		prompt.OptionTitle("buntdb-cli: an interactive buntdb shell client"),
-		prompt.OptionPrefix(path.Base(CLI.Path)+"> "),
+		prompt.OptionLivePrefix(func() (prefix string, useLivePrefix bool) {
+			tx, rw := db.GetCurrentTransaction()
+			if tx != nil {
+				return path.Base(CLI.Path) + fmt.Sprintf("(%v)", db.RWDescribe(rw)) + "> ", true
+			} else {
+				return path.Base(CLI.Path) + "> ", true
+			}
+		}),
+		prompt.OptionSetExitCheckerOnInput(func(in string, breakline bool) bool {
+			return in == "exit" && breakline
+		}),
 	)
 	p.Run()
+	tx, _ := db.GetCurrentTransaction()
+	if tx != nil {
+		fmt.Println("WARN: current transaction will rollback")
+		db.Rollback()
+	}
 	fmt.Println("bye")
 }

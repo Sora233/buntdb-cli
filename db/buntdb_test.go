@@ -72,3 +72,56 @@ func TestGetTempDbPath(t *testing.T) {
 	os.Remove(testDb)
 	os.Remove(testDb2)
 }
+
+func TestRWDescribe(t *testing.T) {
+	assert.Equal(t, "rw", RWDescribe(true))
+	assert.Equal(t, "r", RWDescribe(false))
+}
+
+func TestBegin(t *testing.T) {
+	assert.Nil(t, InitBuntDB(testDb))
+	tx, err := Begin(true)
+	assert.Nil(t, err)
+	_, err = tx.Get("a")
+	assert.Equal(t, buntdb.ErrNotFound, err)
+	_, _, err = tx.Set("a", "a", nil)
+	assert.Nil(t, err)
+	val, err := tx.Get("a")
+	assert.Nil(t, err)
+	assert.Equal(t, "a", val)
+	assert.Nil(t, Rollback())
+
+	db, _ := GetClient()
+	db.View(func(tx *buntdb.Tx) error {
+		_, err := tx.Get("a")
+		assert.Equal(t, buntdb.ErrNotFound, err)
+		return nil
+	})
+
+	tx, err = Begin(false)
+	_, _, err = tx.Set("a", "a", nil)
+	assert.Equal(t, buntdb.ErrTxNotWritable, err)
+	assert.NotNil(t, Commit())
+	assert.Nil(t, Rollback())
+	os.Remove(testDb)
+	os.Remove(testDb2)
+}
+
+func TestGetCurrentTransaction(t *testing.T) {
+	assert.Nil(t, InitBuntDB(testDb))
+	Begin(true)
+	tx, rw := GetCurrentTransaction()
+	assert.True(t, rw)
+	assert.NotNil(t, tx)
+	Commit()
+
+	Begin(false)
+	tx, rw = GetCurrentTransaction()
+	assert.False(t, rw)
+	assert.NotNil(t, tx)
+	Rollback()
+	tx, rw = GetCurrentTransaction()
+	assert.Nil(t, tx)
+	os.Remove(testDb)
+	os.Remove(testDb2)
+}
