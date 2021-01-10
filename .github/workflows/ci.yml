@@ -1,11 +1,11 @@
-on: [push, pull_request]
+on: [ push, pull_request ]
 jobs:
   test:
     runs-on: ubuntu-18.04
     strategy:
       fail-fast: false
       matrix:
-        go: ['1.11', '1.12', '1.13', '1.14', '1.15']
+        go: [ '1.11', '1.12', '1.13', '1.14', '1.15' ]
 
     steps:
       - uses: actions/setup-go@v1
