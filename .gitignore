@@ -1,6 +1,6 @@
 /.idea
 
-/buntdb-cli
+/buntdb-cli*
 /vendor
 /.coverage
 /coverage.html

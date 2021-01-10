@@ -20,10 +20,12 @@ jobs:
             goarch: "386"
     steps:
     - uses: actions/checkout@v2
+    - name: Set RELEASE_VERSION env
+      run: echo "RELEASE_VERSION=${GITHUB_REF:10}" >> $GITHUB_ENV
     - uses: wangyoucao577/go-release-action@v1.12
       with:
-        build_command: make build
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        goversion: "https://dl.google.com/go/go1.15.6.linux-amd64.tar.gz"
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
+        goversion: "https://golang.org/dl/go1.15.6.linux-amd64.tar.gz"
+        ldflags: -w -s -X "github.com/Sora233/buntdb-cli/main.COMMIT=${{ env.RELEASE_VERSION }}" -X "github.com/Sora233/buntdb-cli/main.GOVERSION=go1.15.6.linux-amd64"
