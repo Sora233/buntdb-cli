@@ -112,6 +112,9 @@ func (u *UseGrammar) Run(ctx *kong.Context, tx *buntdb.Tx) error {
 	if tx != nil {
 		return db.ErrTransactionExist
 	}
+	if u.Path == ":memory:" {
+		return db.InitBuntDB(u.Path)
+	}
 	f, err := os.Lstat(u.Path)
 	if err != nil {
 		if !os.IsNotExist(err) {

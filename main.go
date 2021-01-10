@@ -38,9 +38,9 @@ func main() {
 		prompt.OptionLivePrefix(func() (prefix string, useLivePrefix bool) {
 			tx, rw := db.GetCurrentTransaction()
 			if tx != nil {
-				return path.Base(CLI.Path) + fmt.Sprintf("(%v)", db.RWDescribe(rw)) + "> ", true
+				return path.Base(db.GetDbPath()) + fmt.Sprintf("(%v)", db.RWDescribe(rw)) + "> ", true
 			} else {
-				return path.Base(CLI.Path) + "> ", true
+				return path.Base(db.GetDbPath()) + "> ", true
 			}
 		}),
 		prompt.OptionSetExitCheckerOnInput(func(in string, breakline bool) bool {

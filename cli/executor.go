@@ -41,7 +41,6 @@ func BuntdbExecutor(s string) {
 	}
 	tx, rw := db.GetCurrentTransaction()
 	if ctx.Selected().Name == "use" {
-		fmt.Printf("tx %v", tx)
 		err = ctx.Run(tx)
 		if err != nil {
 			fmt.Printf("ERR: %v\n", err)
