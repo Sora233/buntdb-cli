@@ -123,13 +123,11 @@ func (u *UseGrammar) Run(ctx *kong.Context, tx *buntdb.Tx) error {
 		if u.Create {
 			return db.InitBuntDB(u.Path)
 		} else {
-			fmt.Fprintf(ctx.Stdout, "%v does not exist, set --create to create it.\n", u.Path)
-			return nil
+			return fmt.Errorf("%v does not exist, set --create to create it", u.Path)
 		}
 	}
 	if f.IsDir() {
-		fmt.Fprintf(ctx.Stdout, "%v is a dir.\n", u.Path)
-		return nil
+		return fmt.Errorf("%v is a dir", u.Path)
 	}
 	return db.InitBuntDB(u.Path)
 }
@@ -146,10 +144,9 @@ func (t *TTLGrammar) Run(ctx *kong.Context, tx *buntdb.Tx) error {
 			return nil
 		}
 		return err
-	} else {
-		fmt.Fprintln(ctx.Stdout, int64(ttl.Seconds()))
-		return nil
 	}
+	fmt.Fprintln(ctx.Stdout, int64(ttl.Seconds()))
+	return nil
 }
 
 type RWBeginGrammar struct{}
@@ -178,6 +175,46 @@ func (r *RollbackGrammar) Run(ctx *kong.Context) error {
 	return db.Rollback()
 }
 
+type ShrinkGrammar struct{}
+
+func (s *ShrinkGrammar) Run(ctx *kong.Context) error {
+	return db.Shrink()
+}
+
+type SaveGrammar struct {
+	Path  string `arg:"" help:"the path to save"`
+	Force bool   `optional:"" help:"overwrite if the path exists"`
+}
+
+func (s *SaveGrammar) Run(ctx *kong.Context) error {
+	f, err := os.Lstat(s.Path)
+	if err == nil {
+		if f.IsDir() {
+			return fmt.Errorf("%v is a dir", s.Path)
+		}
+		if !s.Force {
+			return fmt.Errorf("%v exist, use --force to overwrite it", s.Path)
+		}
+	}
+	file, err := os.Create(s.Path)
+	if err != nil {
+		return err
+	}
+	return db.Save(file)
+}
+
+type DropGrammar struct {
+	Index DropIndexGrammar `cmd:"" help:"drop the index with the given name"`
+}
+
+type DropIndexGrammar struct {
+	Name string `arg:"" help:"the index name to drop"`
+}
+
+func (s *DropIndexGrammar) Run(ctx *kong.Context, tx *buntdb.Tx) error {
+	return tx.DropIndex(s.Name)
+}
+
 type Grammar struct {
 	Get      GetGrammar      `cmd:"" help:"get a value from key, return the value if key exists, or <nil> if non-exists."`
 	Set      SetGrammar      `cmd:"" help:"set a key-value [ttl], return the old value, or <nil> if old value doesn't exist."`
@@ -190,6 +227,9 @@ type Grammar struct {
 	RBegin   RBeginGrammar   `cmd:"" name:"rbegin" help:"begin a readonly transaction"`
 	Commit   CommitGrammar   `cmd:"" help:"commit a transaction"`
 	Rollback RollbackGrammar `cmd:"" help:"rollback a transaction"`
+	Shrink   ShrinkGrammar   `cmd:"" help:"run database shrink command"`
+	Save     SaveGrammar     `cmd:"" help:"save the db to file"`
+	Drop     DropGrammar     `cmd:"" help:"drop command"`
 	Exit     bool            `kong:"-"`
 }
 

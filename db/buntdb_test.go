@@ -3,6 +3,7 @@ package db
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/buntdb"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,6 +46,7 @@ func TestSwitchBuntDB(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, InitBuntDB(testDb2))
 	db, err = GetClient()
+	assert.Nil(t, err)
 	err = db.View(func(tx *buntdb.Tx) error {
 		_, err := tx.Get("a")
 		assert.Equal(t, buntdb.ErrNotFound, err)
@@ -92,6 +94,7 @@ func TestBegin(t *testing.T) {
 	})
 
 	tx, err = Begin(false)
+	assert.Nil(t, err)
 	_, _, err = tx.Set("a", "a", nil)
 	assert.Equal(t, buntdb.ErrTxNotWritable, err)
 	assert.NotNil(t, Commit())
@@ -124,9 +127,40 @@ func TestGetCurrentTransaction(t *testing.T) {
 	tx, rw = GetCurrentTransaction()
 	assert.False(t, rw)
 	assert.NotNil(t, tx)
+	Shrink()
 	Rollback()
 	tx, rw = GetCurrentTransaction()
 	assert.Nil(t, tx)
+	Shrink()
+	os.Remove(testDb)
+	os.Remove(testDb2)
+}
+
+func TestSave(t *testing.T) {
+	assert.Nil(t, InitBuntDB(testDb))
+	db, err := GetClient()
+	assert.Nil(t, err)
+	err = db.Update(func(tx *buntdb.Tx) error {
+		_, _, err := tx.Set("a", "testsave", nil)
+		return err
+	})
+	assert.Nil(t, err)
+	f, err := ioutil.TempFile("", "test_save")
+	assert.Nil(t, err)
+	Save(f)
+	Close()
+	f.Close()
+
+	db, err = buntdb.Open(f.Name())
+	assert.Nil(t, err)
+	db.View(func(tx *buntdb.Tx) error {
+		val, err := tx.Get("a")
+		assert.Nil(t, err)
+		assert.Equal(t, "testsave", val)
+		return nil
+	})
+	db.Close()
+	os.Remove(f.Name())
 	os.Remove(testDb)
 	os.Remove(testDb2)
 }

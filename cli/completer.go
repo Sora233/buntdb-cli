@@ -14,15 +14,15 @@ func BuntdbCompleter(d prompt.Document) []prompt.Suggest {
 	args := strings.Split(d.TextBeforeCursor(), " ")
 	if len(args) == 1 {
 		// input command
-		return cmdCompleter(args[0])
+		return cmdCompleter(d, args[0])
 	} else {
-		return optionCompleter(args[0], args[1:])
+		return optionCompleter(d, args[0], args[1:])
 	}
 }
 
-func cmdCompleter(cmd string) []prompt.Suggest {
+func cmdCompleter(d prompt.Document, cmd string) []prompt.Suggest {
 	if Debug {
-		fmt.Printf("cmdCompleter %v\n", cmd)
+		fmt.Printf("|cmdCompleter %v|\n", cmd)
 	}
 	cmds := []prompt.Suggest{
 		{Text: "get", Description: "get command"},
@@ -33,12 +33,15 @@ func cmdCompleter(cmd string) []prompt.Suggest {
 		{Text: "keys", Description: "iterate keys"},
 		{Text: "use", Description: "change db"},
 		{Text: "exit", Description: "exit buntdb shell client"},
+		{Text: "drop", Description: "drop the index"},
 	}
 	tx, _ := db.GetCurrentTransaction()
 	if tx == nil {
 		cmds = append(cmds,
 			prompt.Suggest{Text: "rbegin", Description: "open a readonly transaction"},
 			prompt.Suggest{Text: "rwbegin", Description: "open a read/write transaction"},
+			prompt.Suggest{Text: "shrink", Description: "shrink command"},
+			prompt.Suggest{Text: "save", Description: "save db to file"},
 		)
 	} else {
 		cmds = append(cmds,
@@ -49,19 +52,35 @@ func cmdCompleter(cmd string) []prompt.Suggest {
 	return prompt.FilterHasPrefix(cmds, cmd, true)
 }
 
-func optionCompleter(cmd string, args []string) []prompt.Suggest {
+func optionCompleter(d prompt.Document, cmd string, args []string) []prompt.Suggest {
 	if Debug {
-		fmt.Printf("optionCompleter %v %v\n", cmd, args)
+		fmt.Printf("|optionCompleter %v [%v]|\n", cmd, strings.Join(args, ":"))
 	}
+	var result = make([]prompt.Suggest, 0)
 	switch cmd {
 	case "get":
 	case "set":
 	case "del":
 	case "ttl":
 	case "show":
-		return []prompt.Suggest{
+		result = []prompt.Suggest{
 			{Text: "index"},
 			{Text: "db"},
+		}
+		if len(args) == 0 {
+			break
+		}
+		arg := args[0]
+		if Debug {
+			fmt.Printf("|arg %v|", arg)
+		}
+		switch arg {
+		case "index":
+			result = []prompt.Suggest{}
+		case "db":
+			result = []prompt.Suggest{}
+		default:
+			result = prompt.FilterHasPrefix(result, arg, true)
 		}
 	case "keys":
 	case "use":
@@ -69,8 +88,33 @@ func optionCompleter(cmd string, args []string) []prompt.Suggest {
 	case "rwbegin":
 	case "rollback":
 	case "commit":
+	case "shrink":
+	case "save":
+	case "drop":
+		result = []prompt.Suggest{
+			{Text: "index"},
+		}
+		if len(args) == 0 {
+			break
+		}
+		switch args[0] {
+		case "index":
+			result = []prompt.Suggest{}
+			tx, _, closeTx := db.GetCurrentOrNewTransaction()
+			defer closeTx()
+			indexes, err := tx.Indexes()
+			if err == nil {
+				for _, index := range indexes {
+					result = append(result, prompt.Suggest{Text: index})
+				}
+				if len(args) >= 2 {
+					result = prompt.FilterHasPrefix(result, args[1], true)
+				}
+			}
+		default:
+			result = prompt.FilterHasPrefix(result, args[0], true)
+		}
 	default:
-		return []prompt.Suggest{}
 	}
-	return []prompt.Suggest{}
+	return result
 }

@@ -7,6 +7,25 @@ import (
 	"strings"
 )
 
+type transactionRequireType int64
+
+const (
+	noNeed transactionRequireType = iota
+	any
+	nonNil
+)
+
+func commandTransactionRequireType(command string) transactionRequireType {
+	switch command {
+	case "rwbegin", "rbegin", "rollback", "commit", "shrink", "save":
+		return noNeed
+	case "use":
+		return any
+	default:
+		return nonNil
+	}
+}
+
 func BuntdbExecutor(s string) {
 	s = strings.TrimSpace(s)
 	if s == "" || s == "exit" {
@@ -32,46 +51,31 @@ func BuntdbExecutor(s string) {
 		return
 	}
 	cmd := ctx.Selected().Name
-	if cmd == "rwbegin" || cmd == "rbegin" || cmd == "rollback" || cmd == "commit" {
+	switch commandTransactionRequireType(cmd) {
+	case noNeed:
 		err = ctx.Run()
 		if err != nil {
 			fmt.Printf("ERR: %v\n", err)
 		}
 		return
-	}
-	tx, rw := db.GetCurrentTransaction()
-	if ctx.Selected().Name == "use" {
-		err = ctx.Run(tx)
-		if err != nil {
-			fmt.Printf("ERR: %v\n", err)
-		}
-		return
-	}
-	if tx != nil {
-		if Debug {
-			fmt.Printf("got current %v transaction\n", db.RWDescribe(rw))
-		}
-		err = ctx.Run(tx)
-		if err != nil {
-			fmt.Printf("ERR: %v\n", err)
+	case any:
+		tx, _ := db.GetCurrentTransaction()
+		if cmd == "use" {
+			err = ctx.Run(tx)
+			if err != nil {
+				fmt.Printf("ERR: %v\n", err)
+			}
 			return
 		}
-	} else {
+	case nonNil:
+		tx, rw, closeTx := db.GetCurrentOrNewTransaction()
 		if Debug {
-			fmt.Printf("no transaction, create a rw transaction\n")
-		}
-		tx, err := db.Begin(true)
-		if err != nil {
-			fmt.Printf("ERR: %v\n", err)
-			return
+			fmt.Printf("GetCurrentOrNewTransaction(%v)\n", db.RWDescribe(rw))
 		}
 		defer func() {
-			if Debug {
-				fmt.Printf("transaction commit\n")
-			}
-			err := db.Commit()
+			err = closeTx()
 			if err != nil {
-				fmt.Printf("ERR: commit error %v\n", err)
+				fmt.Printf("ERR: %v\n", err)
 			}
 		}()
 		err = ctx.Run(tx)
@@ -79,5 +83,8 @@ func BuntdbExecutor(s string) {
 			fmt.Printf("ERR: %v\n", err)
 			return
 		}
+	default:
+		fmt.Printf("ERR: unknown transaction require\n")
+		return
 	}
 }

@@ -26,10 +26,14 @@ func TestBuntdbCompleter(t *testing.T) {
 	d = buf.Document()
 	assert.NotNil(t, d)
 	sug = BuntdbCompleter(*d)
-	assert.Len(t, sug, 2)
-	text := []string{sug[0].Text, sug[1].Text}
+	var text []string
+	for _, s := range sug {
+		text = append(text, s.Text)
+	}
 	assert.Contains(t, text, "set")
 	assert.Contains(t, text, "show")
+	assert.Contains(t, text, "shrink")
+	assert.Contains(t, text, "save")
 
 	buf.DeleteBeforeCursor(999)
 	buf.InsertText("get ", false, true)
@@ -58,6 +62,7 @@ func TestBuntdbCompleter(t *testing.T) {
 	buf.DeleteBeforeCursor(999)
 
 	db.InitBuntDB(":memory:")
+	defer db.Close()
 	db.Begin(true)
 	buf.InsertText("r", false, true)
 	d = buf.Document()
@@ -66,6 +71,24 @@ func TestBuntdbCompleter(t *testing.T) {
 	assert.Len(t, sug, 1)
 	assert.Equal(t, "rollback", sug[0].Text)
 	db.Rollback()
-	db.Close()
 
+	buf.DeleteBeforeCursor(999)
+	buf.InsertText("dr", false, true)
+	d = buf.Document()
+	assert.NotNil(t, d)
+	sug = BuntdbCompleter(*d)
+	assert.Len(t, sug, 1)
+	assert.Equal(t, "drop", sug[0].Text)
+
+	buf.InsertText("op ", false, true)
+	d = buf.Document()
+	assert.NotNil(t, d)
+	sug = BuntdbCompleter(*d)
+	assert.Len(t, sug, 1)
+	assert.Equal(t, "index", sug[0].Text)
+	buf.InsertText("index", false, true)
+	d = buf.Document()
+	assert.NotNil(t, d)
+	sug = BuntdbCompleter(*d)
+	assert.Len(t, sug, 0)
 }

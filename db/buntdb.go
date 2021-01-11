@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"github.com/tidwall/buntdb"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -123,8 +124,33 @@ func Rollback() error {
 	}
 }
 
+func Shrink() error {
+	if tx != nil {
+		return ErrTransactionExist
+	}
+	return db.Shrink()
+}
+
+func Save(writer io.Writer) error {
+	if tx != nil {
+		return ErrTransactionExist
+	}
+	return db.Save(writer)
+}
+
+// GetCurrentTransaction return current transaction, return nil if no current transaction
 func GetCurrentTransaction() (*buntdb.Tx, bool) {
 	return tx, writable
+}
+
+// GetCurrentOrNewTransaction return current transaction, or create new one if no transaction,
+// make sure the func is called.
+func GetCurrentOrNewTransaction() (*buntdb.Tx, bool, func() error) {
+	if tx != nil {
+		return tx, writable, func() error { return nil }
+	}
+	Begin(true)
+	return tx, writable, func() error { return Commit() }
 }
 
 func RWDescribe(writable bool) string {

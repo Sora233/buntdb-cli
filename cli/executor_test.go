@@ -97,6 +97,10 @@ func TestBuntdbExecutor(t *testing.T) {
 	BuntdbExecutor("rbegin")
 	BuntdbExecutor("del x")
 	BuntdbExecutor("del y")
+	BuntdbExecutor("shrink")
+	BuntdbExecutor("save testcli_save")
+	_, err = os.Lstat("testcli_save")
+	assert.Nil(t, err)
 	BuntdbExecutor("commit")
 	BuntdbExecutor("rollback")
 	bd.View(func(tx *buntdb.Tx) error {
@@ -108,15 +112,24 @@ func TestBuntdbExecutor(t *testing.T) {
 		assert.Equal(t, "x", val)
 		return nil
 	})
+	BuntdbExecutor("shrink")
+	BuntdbExecutor("set a xy")
+	BuntdbExecutor("save testcli_save")
+	_, err = os.Lstat("testcli_save")
+	assert.Nil(t, err)
+	BuntdbExecutor("save testcli_save")
+	BuntdbExecutor("save --force testcli_save")
 
 	BuntdbExecutor("use testcli-2")
 	BuntdbExecutor("use -c testcli-2")
 	assert.Equal(t, db.GetDbPath(), "testcli-2")
 	BuntdbExecutor("use -c testcli")
 	assert.Equal(t, db.GetDbPath(), "testcli")
+	BuntdbExecutor("use :memory:")
 	BuntdbExecutor("exit")
 	BuntdbExecutor("")
 
+	os.Remove("testcli_save")
 	os.Remove("testcli")
 	os.Remove("testcli-2")
 }

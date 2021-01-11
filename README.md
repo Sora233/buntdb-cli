@@ -37,10 +37,13 @@ go get -u -v github.com/Sora233/buntdb-cli
     * show
     * keys
     * use
+    * shrink
+    * save
 
 You can provide -h flag for command to print help message.
 ![get](https://user-images.githubusercontent.com/11474360/104104364-81e09e00-52e2-11eb-8863-391420bf6064.jpg)
 
 ### TODO
 
-- [ ] create index
+- [ ] create index (Index is memory-only, You need to create index everytime you restart, so I am considering whether to
+  impl it)
