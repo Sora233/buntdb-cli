@@ -2,7 +2,7 @@
 
 an interactive [buntdb](https://github.com/tidwall/buntdb) shell client
 
-![build](https://github.com/Sora233/buntdb-cli/workflows/.github/workflows/ci.yml/badge.svg)
+![ci](https://github.com/Sora233/buntdb-cli/workflows/ci/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/Sora233/buntdb-cli/badge.svg?branch=master)](https://coveralls.io/github/Sora233/buntdb-cli?branch=master)
 
 ----
