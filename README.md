@@ -15,6 +15,8 @@ an interactive [buntdb](https://github.com/tidwall/buntdb) shell client
 
 *It's **recommended** to use binary release*
 
+- go >= 1.13
+
 ```shell
 go get -u -v github.com/Sora233/buntdb-cli
 ```
