@@ -8,6 +8,7 @@ import (
 	"github.com/c-bata/go-prompt"
 	"os"
 	"path"
+	"strings"
 )
 
 var CLI struct {
@@ -18,7 +19,6 @@ var CLI struct {
 
 func main() {
 	kong.Parse(&CLI, kong.UsageOnError(), kong.Name("buntdb-cli"))
-	defer os.Exit(0)
 
 	if CLI.Debug {
 		cli.Debug = true
@@ -28,7 +28,11 @@ func main() {
 		CLI.Path = db.GetTempDbPath("buntdb-cli")
 	}
 
-	db.InitBuntDB(CLI.Path)
+	err := db.InitBuntDB(CLI.Path)
+	if err != nil {
+		fmt.Printf("ERR: %v\n", err)
+		os.Exit(1)
+	}
 	defer db.Close()
 
 	p := prompt.New(
@@ -44,7 +48,7 @@ func main() {
 			}
 		}),
 		prompt.OptionSetExitCheckerOnInput(func(in string, breakline bool) bool {
-			return in == "exit" && breakline
+			return strings.TrimSpace(in) == "exit" && breakline
 		}),
 	)
 	p.Run()
