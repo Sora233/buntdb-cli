@@ -25,5 +25,5 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        goversion: "https://golang.org/dl/go1.15.6.linux-amd64.tar.gz"
-        ldflags: "-w -s -X 'github.com/Sora233/buntdb-cli/main.COMMIT=${{ github.sha }}' -X 'github.com/Sora233/buntdb-cli/main.GOVERSION=go1.15.6.linux-amd64'"
+        goversion: "https://golang.org/dl/go1.16.4.linux-amd64.tar.gz"
+        ldflags: -w -s -X main.COMMIT=${{ github.sha }} -X main.GOVERSION=go1.16.4.linux-amd64
