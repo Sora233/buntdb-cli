@@ -13,7 +13,7 @@ test : $(cov)
 cov: $(cov)
 	go tool cover -html=$(cov)
 
-$(package): $(SRC)
+$(package): $(SRC) go.mod go.sum
 	go build -ldflags $(flags)
 
 .DELETE_ON_ERROR:

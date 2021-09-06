@@ -12,3 +12,5 @@ require (
 	golang.org/x/sys v0.0.0-20210108172913-0df2131ae363 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
+
+replace github.com/c-bata/go-prompt => github.com/Xiami2012/go-prompt v0.2.7-0.20210617172556-566a3e3f3d2e
