@@ -7,7 +7,7 @@ require (
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/stretchr/testify v1.7.0
-	github.com/tidwall/buntdb v1.2.6
+	github.com/tidwall/buntdb v1.2.7
 	golang.org/x/sys v0.0.0-20210108172913-0df2131ae363 // indirect
 )
 
