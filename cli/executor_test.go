@@ -8,6 +8,33 @@ import (
 	"testing"
 )
 
+func TestSearch(t *testing.T) {
+	Debug = true
+	BuntdbExecutor("use -c testsearch")
+	assert.Equal(t, db.GetDbPath(), "testsearch")
+	bd, err := db.GetClient()
+	assert.Nil(t, err)
+	BuntdbExecutor("set a foo")
+	BuntdbExecutor("set b bar")
+	BuntdbExecutor("set c bar")
+	BuntdbExecutor("set d barrrr")
+	BuntdbExecutor("set e fooba")
+	BuntdbExecutor("search bar --delete")
+	bd.View(func(tx *buntdb.Tx) error {
+		val, err := tx.Get("a")
+		assert.Nil(t, err)
+		assert.Equal(t, "foo", val)
+		_, err = tx.Get("c")
+		assert.Equal(t, buntdb.ErrNotFound, err)
+		_, err = tx.Get("d")
+		assert.Equal(t, buntdb.ErrNotFound, err)
+		val, err = tx.Get("e")
+		assert.Nil(t, err)
+		assert.Equal(t, "fooba", val)
+		return nil
+	})
+}
+
 func TestBuntdbExecutor(t *testing.T) {
 	Debug = true
 	BuntdbExecutor("use -c testcli")
