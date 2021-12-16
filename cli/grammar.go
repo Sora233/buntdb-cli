@@ -127,16 +127,19 @@ func (s SearchGrammar) Run(ctx *kong.Context, tx *buntdb.Tx) error {
 		return nil
 	}
 
-	fmt.Fprintf(ctx.Stdout, "\n\n-------------------\n\nFound %d keys, written above. \nSleeping 10 seconds before we delete.", len(keys))
+	fmt.Fprintf(ctx.Stdout, "\n\n-------------------\n\nFound %d keys, written above. \nSleeping 10 seconds before we delete.\n", len(keys))
 	for n := 0; n != 10; n++ {
 		time.Sleep(1 * time.Second)
 		fmt.Fprintf(ctx.Stdout, ".")
 	}
 
-	for _, k := range keys {
+	for i, k := range keys {
+		if i == 1 {
+			fmt.Fprint(ctx.Stdout, "\n")
+		}
 		_, err := tx.Delete(k)
 		if err == nil {
-			fmt.Fprintln(ctx.Stdout, "Deleted: %v", k)
+			fmt.Fprintf(ctx.Stdout, "Deleted: %v\n", k)
 		}
 	}
 	return nil
