@@ -6,6 +6,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/tidwall/buntdb"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -101,6 +102,44 @@ func (k KeysGrammar) Run(ctx *kong.Context, tx *buntdb.Tx) error {
 		fmt.Fprintf(ctx.Stdout, "%v : %v\n", key, value)
 		return true
 	})
+}
+
+type SearchGrammar struct {
+	Pattern string `arg:"" help:"the match pattern "`
+	Delete  bool   `optional:"" short:"c" help:"delete all keys found (DANGEROUS)"`
+}
+
+func (s SearchGrammar) Run(ctx *kong.Context, tx *buntdb.Tx) error {
+	var keys []string
+	err := tx.AscendKeys("*", func(key, value string) bool {
+		if strings.Contains(value, s.Pattern) {
+			keys = append(keys, key)
+			fmt.Fprintf(ctx.Stdout, "%v : %v\n", key, value)
+		}
+		return true
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if !s.Delete {
+		return nil
+	}
+
+	fmt.Fprintf(ctx.Stdout, "\n\n-------------------\n\nFound %d keys, written above. \nSleeping 10 seconds before we delete.", len(keys))
+	for n := 0; n != 10; n++ {
+		time.Sleep(1 * time.Second)
+		fmt.Fprintf(ctx.Stdout, ".")
+	}
+
+	for _, k := range keys {
+		_, err := tx.Delete(k)
+		if err == nil {
+			fmt.Fprintln(ctx.Stdout, "Deleted: %v", k)
+		}
+	}
+	return nil
 }
 
 type UseGrammar struct {
@@ -215,6 +254,18 @@ func (s *DropIndexGrammar) Run(ctx *kong.Context, tx *buntdb.Tx) error {
 	return tx.DropIndex(s.Name)
 }
 
+type HelpGrammar struct {
+	//
+}
+
+func (h *HelpGrammar) Run(ctx *kong.Context) (err error) {
+	commands := "get\nset\ndel\nttl\nrbegin (begin a readonly transaction)\nrwbegin (begin a read/write transaction)\ncommit\nrollback\nshow\nkeys\nsearch\nuse\nshrink"
+	_, err = fmt.Fprintln(ctx.Stdout,
+		"Commands available:\n----------\n"+commands+"\n----------\nFor more help, try running a command with the -h switch.",
+	)
+	return
+}
+
 type Grammar struct {
 	Get      GetGrammar      `cmd:"" help:"get a value from key, return the value if key exists, or <nil> if non-exists."`
 	Set      SetGrammar      `cmd:"" help:"set a key-value [ttl], return the old value, or <nil> if old value doesn't exist."`
@@ -230,6 +281,8 @@ type Grammar struct {
 	Shrink   ShrinkGrammar   `cmd:"" help:"run database shrink command"`
 	Save     SaveGrammar     `cmd:"" help:"save the db to file"`
 	Drop     DropGrammar     `cmd:"" help:"drop command"`
+	Search   SearchGrammar   `cmd:"" help:"Search for a string contained in any values"`
+	Help     HelpGrammar     `cmd:""`
 	Exit     bool            `kong:"-"`
 }
 
