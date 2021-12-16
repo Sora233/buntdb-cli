@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type transactionRequireType int64
+type transactionRequireType uint8
 
 const (
 	noNeed transactionRequireType = iota
@@ -38,10 +38,12 @@ func BuntdbExecutor(s string) {
 	}
 
 	grammar := NewGrammar()
+
 	k := kong.Must(
 		grammar,
 		kong.Exit(grammar.ExitWrapper),
 	)
+
 	ctx, err := k.Parse(args)
 	if grammar.Exit {
 		return

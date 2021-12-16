@@ -31,9 +31,11 @@ func cmdCompleter(d prompt.Document, cmd string) []prompt.Suggest {
 		{Text: "ttl", Description: "ttl command"},
 		{Text: "show", Description: "show info"},
 		{Text: "keys", Description: "iterate keys"},
+		{Text: "search", Description: "search for string in all values"},
 		{Text: "use", Description: "change db"},
 		{Text: "exit", Description: "exit buntdb shell client"},
 		{Text: "drop", Description: "drop the index"},
+		{Text: "help", Description: "show available commands"},
 	}
 	tx, _ := db.GetCurrentTransaction()
 	if tx == nil {
