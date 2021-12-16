@@ -33,6 +33,7 @@ func TestSearch(t *testing.T) {
 		assert.Equal(t, "fooba", val)
 		return nil
 	})
+	os.Remove("testsearch")
 }
 
 func TestBuntdbExecutor(t *testing.T) {
