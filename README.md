@@ -38,6 +38,7 @@ go get -u -v github.com/Sora233/buntdb-cli
     * rollback
     * show
     * keys
+    * search
     * use
     * shrink
     * save
@@ -47,5 +48,4 @@ You can provide -h flag for command to print help message.
 
 ### TODO
 
-- [ ] create index (Index is memory-only, You need to create index everytime you restart, so I am considering whether to
-  impl it)
+- [ ] create index (Index is memory-only, You need to create index everytime you restart, so I am considering whether to impl it)
