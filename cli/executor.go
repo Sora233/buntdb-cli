@@ -62,13 +62,11 @@ func BuntdbExecutor(s string) {
 		return
 	case any:
 		tx, _ := db.GetCurrentTransaction()
-		if cmd == "use" {
-			err = ctx.Run(tx)
-			if err != nil {
-				fmt.Printf("ERR: %v\n", err)
-			}
-			return
+		err = ctx.Run(tx)
+		if err != nil {
+			fmt.Printf("ERR: %v\n", err)
 		}
+		return
 	case nonNil:
 		tx, rw, closeTx := db.GetCurrentOrNewTransaction()
 		if Debug {

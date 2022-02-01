@@ -53,6 +53,7 @@ func TestBuntdbExecutor(t *testing.T) {
 		assert.Equal(t, "b", val)
 		return nil
 	})
+	BuntdbExecutor("dbsize")
 	BuntdbExecutor("set a c")
 	bd.View(func(tx *buntdb.Tx) error {
 		val, err := tx.Get("a")
@@ -95,6 +96,7 @@ func TestBuntdbExecutor(t *testing.T) {
 	BuntdbExecutor("rwbegin")
 	BuntdbExecutor("set x y")
 	BuntdbExecutor("set y x")
+	BuntdbExecutor("dbsize")
 	BuntdbExecutor("commit")
 
 	bd.View(func(tx *buntdb.Tx) error {
@@ -111,6 +113,7 @@ func TestBuntdbExecutor(t *testing.T) {
 	BuntdbExecutor("del x")
 	BuntdbExecutor("del y")
 	BuntdbExecutor("set x xxx")
+	BuntdbExecutor("dbsize")
 	BuntdbExecutor("rollback")
 	bd.View(func(tx *buntdb.Tx) error {
 		val, err := tx.Get("x")
@@ -126,6 +129,7 @@ func TestBuntdbExecutor(t *testing.T) {
 	BuntdbExecutor("del x")
 	BuntdbExecutor("del y")
 	BuntdbExecutor("shrink")
+	BuntdbExecutor("dbsize")
 	BuntdbExecutor("save testcli_save")
 	_, err = os.Lstat("testcli_save")
 	assert.Nil(t, err)
@@ -140,6 +144,7 @@ func TestBuntdbExecutor(t *testing.T) {
 		assert.Equal(t, "x", val)
 		return nil
 	})
+	BuntdbExecutor("dbsize")
 	BuntdbExecutor("shrink")
 	BuntdbExecutor("set a xy")
 	BuntdbExecutor("save testcli_save")
@@ -156,6 +161,7 @@ func TestBuntdbExecutor(t *testing.T) {
 	BuntdbExecutor("use :memory:")
 	BuntdbExecutor("exit")
 	BuntdbExecutor("")
+	BuntdbExecutor("dbsize")
 
 	os.Remove("testcli_save")
 	os.Remove("testcli")

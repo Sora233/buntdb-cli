@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var null = "<nil>"
+const null = "<nil>"
 
 type GetGrammar struct {
 	Key          string `arg:"" help:"the key to get"`
@@ -262,11 +262,41 @@ type HelpGrammar struct {
 }
 
 func (h *HelpGrammar) Run(ctx *kong.Context) (err error) {
-	commands := "get\nset\ndel\nttl\nrbegin (begin a readonly transaction)\nrwbegin (begin a read/write transaction)\ncommit\nrollback\nshow\nkeys\nsearch\nuse\nshrink"
+	commands := "get\n" +
+		"set\n" +
+		"del\n" +
+		"ttl\n" +
+		"rbegin (begin a readonly transaction)\n" +
+		"rwbegin (begin a read/write transaction)\n" +
+		"commit\n" +
+		"rollback\n" +
+		"show\n" +
+		"keys\n" +
+		"search\n" +
+		"use\n" +
+		"shrink\n" +
+		"size"
 	_, err = fmt.Fprintln(ctx.Stdout,
 		"Commands available:\n----------\n"+commands+"\n----------\nFor more help, try running a command with the -h switch.",
 	)
 	return
+}
+
+type DBSizeGrammar struct {
+}
+
+func (h *DBSizeGrammar) Run(ctx *kong.Context, tx *buntdb.Tx) (err error) {
+	var count int
+	err = tx.Ascend("", func(key, value string) bool {
+		count++
+		return true
+	})
+	if err != nil {
+		fmt.Fprintf(ctx.Stdout, "ERR: Ascend error %v\n", err)
+		return
+	}
+	fmt.Fprintf(ctx.Stdout, "%v\n", count)
+	return nil
 }
 
 type Grammar struct {
@@ -285,7 +315,8 @@ type Grammar struct {
 	Save     SaveGrammar     `cmd:"" help:"save the db to file"`
 	Drop     DropGrammar     `cmd:"" help:"drop command"`
 	Search   SearchGrammar   `cmd:"" help:"Search for a string contained in any values"`
-	Help     HelpGrammar     `cmd:""`
+	Help     HelpGrammar     `cmd:"" help:"show available command"`
+	DBSize   DBSizeGrammar   `cmd:"" name:"dbsize" help:"show db size"`
 	Exit     bool            `kong:"-"`
 }
 
